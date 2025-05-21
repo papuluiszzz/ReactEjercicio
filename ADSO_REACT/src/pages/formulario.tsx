@@ -106,17 +106,37 @@ const Formulario = () => {
     const url = 'http://localhost:8000/usuarios';
     const method = isEditing ? 'PUT' : 'POST';
 
+    // IMPORTANTE: Solo verificamos campos obligatorios en modo creación
+    if (!isEditing) {
+      // Validación solo para modo de registro, no para actualización
+      if (!user.nombres || !user.apellidos || !user.email) {
+        showNotification('Todos los campos son obligatorios para registrar un nuevo usuario', 'error');
+        setLoading(false);
+        return;
+      }
+    }
+
     // Estructura del body según tu API
-    const requestBody = isEditing ? {
-      idUsuario: user.idUsuario,
-      nombres: user.nombres,
-      apellidos: user.apellidos,
-      email: user.email
-    } : {
-      nombres: user.nombres,
-      apellidos: user.apellidos,
-      email: user.email
-    };
+    let requestBody: any = {};
+    
+    if (isEditing) {
+      // En modo edición, el idUsuario es obligatorio pero los demás campos son opcionales
+      requestBody = {
+        idUsuario: user.idUsuario
+      };
+      
+      // Solo incluimos los campos que tienen valor
+      if (user.nombres !== '') requestBody.nombres = user.nombres;
+      if (user.apellidos !== '') requestBody.apellidos = user.apellidos;
+      if (user.email !== '') requestBody.email = user.email;
+    } else {
+      // En modo creación, incluimos todos los campos
+      requestBody = {
+        nombres: user.nombres,
+        apellidos: user.apellidos,
+        email: user.email
+      };
+    }
 
     fetch(url, {
       method,
@@ -202,7 +222,7 @@ const Formulario = () => {
           <Grid container spacing={3}>
             <Grid item xs={12} sm={6}>
               <TextField
-                required
+                required={!isEditing}
                 fullWidth
                 label="Nombres"
                 name="nombres"
@@ -214,7 +234,7 @@ const Formulario = () => {
             </Grid>
             <Grid item xs={12} sm={6}>
               <TextField
-                required
+                required={!isEditing}
                 fullWidth
                 label="Apellidos"
                 name="apellidos"
@@ -225,7 +245,7 @@ const Formulario = () => {
             </Grid>
             <Grid item xs={12}>
               <TextField
-                required
+                required={!isEditing}
                 fullWidth
                 label="Correo Electrónico"
                 name="email"
